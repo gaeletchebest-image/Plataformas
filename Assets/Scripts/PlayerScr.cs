@@ -1,6 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
+using System.Linq;
+using System;
 
 public class PlayerScr : MonoBehaviour
 {
@@ -10,17 +11,15 @@ public class PlayerScr : MonoBehaviour
     [SerializeField] private float jumpForce = 5f;
     [SerializeField] float maxLinearVelocity = 1.0f;
     [SerializeField] float cooldownJumpCount;
+    [SerializeField] float wallImpulse = 1;
 
     [Header("Camera")]
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private float mouseSensitivity = 0.15f;
     [SerializeField] private float maxLookAngle = 90f;
 
-    [Header("Ground Check")]
-    [SerializeField] private Transform groundCheck;
-    [SerializeField] private float groundCheckRadius = 0.2f;
-    [SerializeField] private LayerMask groundLayer;
 
+    public List<TouchedObjects> touchObjs = new List<TouchedObjects>();
 
     bool isGrounded = false, touchingWall = false;
 
@@ -92,36 +91,83 @@ public class PlayerScr : MonoBehaviour
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             cooldownJumpCount = .1f;
 
-            rb.linearVelocity = transform.forward.normalized * rb.linearVelocity.magnitude;
+            Vector3 jumpDirection = transform.forward.normalized;
+
+            if (touchingWall)
+            {
+                List<TouchedObjects> walls = touchObjs.Where(x => x.sumNormals().y < 0.3f).ToList();
+                if (walls.Count > 0)
+                {
+                    Vector3 wallNormal = Vector3.zero;
+                    walls.ForEach(x => wallNormal.x += x.sumNormals().x);
+                    walls.ForEach(x => wallNormal.y += x.sumNormals().y);
+                    walls.ForEach(x => wallNormal.z += x.sumNormals().z);
+                    wallNormal = wallNormal.normalized;
+
+                    float dot = Vector3.Dot(wallNormal, jumpDirection);
+                    jumpDirection -= wallNormal * dot;
+
+                    jumpDirection += wallNormal * wallImpulse;
+                }
+            }
+
+            rb.linearVelocity = jumpDirection * rb.linearVelocity.magnitude;
         }
 
         if (cooldownJumpCount > 0) cooldownJumpCount -= Time.deltaTime;
     }
 
-    private bool IsGrounded()
-    {
-        return Physics.CheckSphere(
-            groundCheck.position,
-            groundCheckRadius,
-            groundLayer
-        );
-    }
+    private bool IsGrounded() => touchObjs.Any(x => x.normalContacts.Any(y => y.y > 0.3f));
 
     private void OnCollisionStay(Collision collision)
     {
+        TouchedObjects nse1 = new TouchedObjects(collision.gameObject);
         foreach (ContactPoint contact in collision.contacts)
         {
+            nse1.addNormalContact(contact.normal);
             if (contact.normal.y < 0.3f)
             {
                 touchingWall = true;
                 break;
             }
         }
+        touchObjs.RemoveAll(x => x.obj == collision.gameObject);
+        touchObjs.Add(nse1);
     }
 
     private void OnCollisionExit(Collision collision)
     {
+        touchObjs.RemoveAll(x => x.obj == collision.gameObject);
         touchingWall = false;
+    }
+
+}
+
+[Serializable]
+public class TouchedObjects
+{
+    public GameObject obj;
+    public List<Vector3> normalContacts;
+
+    public TouchedObjects(GameObject obj1)
+    {
+        obj = obj1;
+        normalContacts = new List<Vector3>();
+    }
+
+    public void addNormalContact(Vector3 contact)
+    {
+        contact.x = MathF.Round(contact.x, 2);
+        contact.y = MathF.Round(contact.y, 2);
+        contact.z = MathF.Round(contact.z, 2);
+        normalContacts.Add(contact);
+    }
+
+    public Vector3 sumNormals()
+    {
+        Vector3 vec = Vector3.zero;
+        normalContacts.ForEach(x => vec += x);
+        return vec.normalized;
     }
 
 }
