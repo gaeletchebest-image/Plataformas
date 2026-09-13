@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System;
+using UnityEngine.UIElements.Experimental;
 
 public class PlayerScr : MonoBehaviour
 {
@@ -57,6 +58,15 @@ public class PlayerScr : MonoBehaviour
         {
             rb.AddForce(Physics.gravity, ForceMode.Acceleration);
         }
+
+        List<TouchedObjects> plataforms = touchObjs.Where(x => x.plataformComponent != null).ToList();
+        
+        if (plataforms.Count > 0)
+        {
+            Plataform plat = plataforms.FirstOrDefault().plataformComponent;
+            rb.MovePosition(rb.position + plat.GetDelta());
+        }
+        
     }
 
     private void Move()
@@ -148,11 +158,15 @@ public class TouchedObjects
 {
     public GameObject obj;
     public List<Vector3> normalContacts;
+    public Plataform plataformComponent;
 
     public TouchedObjects(GameObject obj1)
     {
         obj = obj1;
         normalContacts = new List<Vector3>();
+
+        if (obj.tag == "Plataform") plataformComponent = obj.GetComponentInParent<Plataform>();
+        else plataformComponent = null;
     }
 
     public void addNormalContact(Vector3 contact)
