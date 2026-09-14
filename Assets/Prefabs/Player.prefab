@@ -161,9 +161,9 @@ MonoBehaviour:
   maxLinearVelocity: 15
   cooldownJumpCount: 0
   wallImpulse: 1
-  impulseForce: 20
+  impulseForce: 30
   impulseCooldown: 0.5
-  impulseTime: 2
+  impulseTime: 3
   cameraTransform: {fileID: 7092261410413240907}
   mouseSensitivity: 0.15
   maxLookAngle: 90
