@@ -6,6 +6,8 @@ public class GameController : MonoBehaviour
     public static GameController Instance;
 
     [SerializeField] ControlsController controls;
+    [SerializeField] GameMotor gameMotor;
+    [SerializeField] PlayerScr player;
 
     private void Awake()
     {
@@ -16,6 +18,8 @@ public class GameController : MonoBehaviour
 
 
     public ControlsController GetControlsController() => controls;
+    public GameMotor GetGameMotor() => gameMotor;
+    public PlayerScr GetPlayer() => player;
 
 
 }

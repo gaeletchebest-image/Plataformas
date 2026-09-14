@@ -65,8 +65,6 @@ public class PlayerScr : MonoBehaviour
                 rb.maxLinearVelocity = maxLinearVelocity + (impulseForce - maxLinearVelocity) * impulseTimeCount / impulseTime;
         }
 
-        Debug.Log(rb.maxLinearVelocity);
-
     }
 
     private void FixedUpdate()
@@ -189,6 +187,17 @@ public class PlayerScr : MonoBehaviour
     {
         if (other.gameObject.tag == "Impulsor")
             Impulse(other.transform.forward);
+    }
+
+    public void ResetPlayer(Vector3 pos)
+    {
+        rb.linearVelocity = Vector3.zero;
+        rb.maxLinearVelocity = maxLinearVelocity;
+
+        cooldownJumpCount = 0;
+        impulseTimeCount = 0; impulseCooldownCount = 0; impulsed = false;
+
+        rb.MovePosition(pos);
     }
 
 }
