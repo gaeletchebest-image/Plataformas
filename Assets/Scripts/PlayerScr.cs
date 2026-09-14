@@ -13,22 +13,25 @@ public class PlayerScr : MonoBehaviour
     [SerializeField] float maxLinearVelocity = 1.0f;
     [SerializeField] float cooldownJumpCount;
     [SerializeField] float wallImpulse = 1;
+    [SerializeField] float impulseForce = 5f, impulseCooldown = .5f, impulseTime = 2f;
 
     [Header("Camera")]
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private float mouseSensitivity = 0.15f;
     [SerializeField] private float maxLookAngle = 90f;
-
+    private float cameraRotationX;
 
     public List<TouchedObjects> touchObjs = new List<TouchedObjects>();
 
-    bool isGrounded = false, touchingWall = false;
+    bool isGrounded = false, touchingWall = false, impulsed = false;
+
+    float impulseTimeCount = 0, impulseCooldownCount = 0;
 
     Rigidbody rb;
     GameController gc;
     ControlsController controls;
 
-    private float cameraRotationX;
+    
 
     private void Start()
     {
@@ -46,6 +49,24 @@ public class PlayerScr : MonoBehaviour
     {
         Look();
         Jump();
+
+        if (impulseCooldownCount > 0) 
+        {
+            impulseCooldownCount -= Time.deltaTime;
+            if (impulseCooldownCount <= 0) impulsed = false;
+        }
+
+        if (impulseTimeCount > 0)
+        {
+            impulseTimeCount -= Time.deltaTime;
+            if (impulseTimeCount <= 0)
+                rb.maxLinearVelocity = maxLinearVelocity;
+            else
+                rb.maxLinearVelocity = maxLinearVelocity + (impulseForce - maxLinearVelocity) * impulseTimeCount / impulseTime;
+        }
+
+        Debug.Log(rb.maxLinearVelocity);
+
     }
 
     private void FixedUpdate()
@@ -129,6 +150,18 @@ public class PlayerScr : MonoBehaviour
 
     private bool IsGrounded() => touchObjs.Any(x => x.normalContacts.Any(y => y.y > 0.3f));
 
+    void Impulse(Vector3 dir)
+    {
+        if (impulsed) return;
+
+        rb.maxLinearVelocity = impulseForce;
+        rb.AddForce(dir * impulseForce, ForceMode.Impulse);
+
+        impulsed = true;
+        impulseCooldownCount = impulseCooldown;
+        impulseTimeCount = impulseTime;
+    }
+
     private void OnCollisionStay(Collision collision)
     {
         TouchedObjects nse1 = new TouchedObjects(collision.gameObject);
@@ -143,12 +176,19 @@ public class PlayerScr : MonoBehaviour
         }
         touchObjs.RemoveAll(x => x.obj == collision.gameObject);
         touchObjs.Add(nse1);
+
     }
 
     private void OnCollisionExit(Collision collision)
     {
         touchObjs.RemoveAll(x => x.obj == collision.gameObject);
         touchingWall = false;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.tag == "Impulsor")
+            Impulse(other.transform.forward);
     }
 
 }
