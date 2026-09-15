@@ -115,7 +115,13 @@ public class PlayerScr : MonoBehaviour
 
     private void Jump()
     {
-        if (controls.Jump && (isGrounded || touchingWall) && cooldownJumpCount <= 0)
+        bool canJumpWall = touchingWall;
+        if (canJumpWall)
+        {
+            if (touchObjs.Count(x => x.obj.tag == "CannotJump") == touchObjs.Count) canJumpWall = false;
+        }
+
+        if (controls.Jump && (isGrounded || canJumpWall) && cooldownJumpCount <= 0)
         {
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             cooldownJumpCount = .1f;

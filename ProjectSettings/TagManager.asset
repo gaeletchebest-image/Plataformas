@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Plataform
   - Impulsor
+  - CannotJump
   layers:
   - Default
   - TransparentFX
