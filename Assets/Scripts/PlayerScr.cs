@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using System;
-using UnityEngine.UIElements.Experimental;
 
 public class PlayerScr : MonoBehaviour
 {
@@ -14,6 +13,7 @@ public class PlayerScr : MonoBehaviour
     [SerializeField] float cooldownJumpCount;
     [SerializeField] float wallImpulse = 1;
     [SerializeField] float impulseForce = 5f, impulseCooldown = .5f, impulseTime = 2f;
+    [SerializeField] float platformFriction = 20f;
 
     [Header("Camera")]
     [SerializeField] private Transform cameraTransform;
@@ -82,8 +82,10 @@ public class PlayerScr : MonoBehaviour
         
         if (plataforms.Count > 0)
         {
+            
             Plataform plat = plataforms.FirstOrDefault().plataformComponent;
             rb.MovePosition(rb.position + plat.GetDelta());
+            if (controls.Move == Vector2.zero) ApplyPlatformFriction();
         }
         
     }
@@ -195,7 +197,7 @@ public class PlayerScr : MonoBehaviour
             Impulse(other.transform.forward);
     }
 
-    public void ResetPlayer(Vector3 pos)
+    public void ResetPlayer(Vector3 pos, Quaternion rot)
     {
         rb.linearVelocity = Vector3.zero;
         rb.maxLinearVelocity = maxLinearVelocity;
@@ -204,6 +206,16 @@ public class PlayerScr : MonoBehaviour
         impulseTimeCount = 0; impulseCooldownCount = 0; impulsed = false;
 
         rb.MovePosition(pos);
+        rb.MoveRotation(rot);
+    }
+
+    void ApplyPlatformFriction()
+    {
+        Vector3 velocity = rb.linearVelocity;
+        Vector3 horizontalVelocity = new Vector3(velocity.x, 0f, velocity.z);
+
+        horizontalVelocity = Vector3.MoveTowards(horizontalVelocity,Vector3.zero, platformFriction * Time.fixedDeltaTime);
+        rb.linearVelocity = new Vector3(horizontalVelocity.x, velocity.y, horizontalVelocity.z);
     }
 
 }

@@ -27,5 +27,6 @@ public class CheckPoint : MonoBehaviour
     }
 
     public Vector3 GetPosSpawn() => posSpawn.position;
+    public Quaternion GetRotationSpawn() => posSpawn.localRotation;
 
 }

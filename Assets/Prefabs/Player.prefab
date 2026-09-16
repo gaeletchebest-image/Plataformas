@@ -164,6 +164,7 @@ MonoBehaviour:
   impulseForce: 30
   impulseCooldown: 0.5
   impulseTime: 3
+  platformFriction: 20
   cameraTransform: {fileID: 7092261410413240907}
   mouseSensitivity: 0.15
   maxLookAngle: 90

@@ -9,12 +9,7 @@ public class Plataform : MonoBehaviour
 
     [SerializeField] bool goingToA = false;
 
-    Vector3 lastPos;
-
-    private void Start()
-    {
-        lastPos = plataformRb.position;
-    }
+    Vector3 delta;
 
     private void FixedUpdate()
     {
@@ -23,14 +18,14 @@ public class Plataform : MonoBehaviour
         else pointToGo = PointB.position;
 
         Vector3 dir = (pointToGo - plataformRb.position).normalized;
-        lastPos = plataformRb.position;
 
-        plataformRb.MovePosition(plataformRb.position + dir * speed * Time.fixedDeltaTime);
+        delta = dir * speed * Time.fixedDeltaTime;
+        plataformRb.MovePosition(plataformRb.position + delta);
 
         if (Vector3.Distance(pointToGo, plataformRb.position) < .2f)
             goingToA = !goingToA;
     }
 
-    public Vector3 GetDelta() => plataformRb.position - lastPos ;
+    public Vector3 GetDelta() => delta ;
 
 }
